@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Password Tools</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:linear-gradient(-45deg,#0f2027,#203a43,#2c5364,#1d2671);
+    background-size:400% 400%;
+    animation:gradient 12s ease infinite;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+@keyframes gradient{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+
+.page{
+    display:none;
+    width:430px;
+    padding:30px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.3);
+    box-shadow:0 15px 40px rgba(0,0,0,.4);
+    color:white;
+}
+
+.active{
+    display:block;
+}
+h1,h2{
+    text-align:center;
+    margin-bottom:20px;
+    color:#fff;
+    text-shadow:0 0 15px #00d9ff;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:12px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:17px;
+    font-weight:bold;
+    color:white;
+    transition:.3s;
+}
+
+.blue{
+    background:linear-gradient(45deg,#2193b0,#6dd5ed);
+}
+
+.green{
+    background:linear-gradient(45deg,#11998e,#38ef7d);
+}
+
+.gray{
+    background:linear-gradient(45deg,#434343,#000000);
+}
+
+button:hover{
+    transform:translateY(-4px) scale(1.03);
+    box-shadow:0 10px 25px rgba(0,0,0,.4);
+}
+
+
+input[type=password],
+input[type=text]{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+.progress{
+    width:100%;
+    height:12px;
+    background:#444;
+    border-radius:30px;
+    overflow:hidden;
+}
+
+.bar{
+    height:100%;
+    width:0%;
+    border-radius:30px;
+    transition:.4s;
+}
+
+#strength{
+    text-align:center;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.options label{
+    display:block;
+    margin:10px 0;
+    font-size:17px;
+    cursor:pointer;
+}
+
+.options input{
+    transform:scale(1.3);
+    margin-right:10px;
+    accent-color:#00e5ff;
+}
+
+#generatedPassword{
+    font-weight:bold;
+    letter-spacing:2px;
+    text-align:center;
+    color:#1d3557;
+}
+
+.range{
+    width:100%;
+}
+
+
+</style>
+
+</head>
+<body>
+
+<!-- HOME PAGE -->
+
+<div class="page active" id="home">
+
+<h1>🔐 Password Tools</h1>
+
+<button class="blue" onclick="showPage('checker')">
+🔍 Password Checker
+</button>
+
+<button class="green" onclick="showPage('generator')">
+🔑 Generate Password
+</button>
+
+</div>
+
+<!-- PASSWORD CHECKER -->
+
+<div class="page" id="checker">
+
+<h2>Password Strength Checker</h2>
+
+<input type="password" id="password" placeholder="Enter Password">
+
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+
+<p id="strength">Strength: None</p>
+
+<button class="gray" onclick="showPage('home')">
+⬅ Back
+</button>
+
+</div>
+
+<!-- PASSWORD GENERATOR -->
+
+<div class="page" id="generator">
+
+<h2>Password Generator</h2>
+
+<label>
+Password Length:
+<b id="lengthValue">12</b>
+</label>
+
+<input
+type="range"
+class="range"
+id="length"
+min="6"
+max="30"
+value="12"
+oninput="lengthValue.innerHTML=this.value">
+
+<div class="options">
+
+<label>
+<input type="checkbox" id="uppercase" checked>
+Uppercase (A-Z)
+</label>
+
+<label>
+<input type="checkbox" id="lowercase" checked>
+Lowercase (a-z)
+</label>
+
+<label>
+<input type="checkbox" id="numbers" checked>
+Numbers (0-9)
+</label>
+
+<label>
+<input type="checkbox" id="symbols" checked>
+Symbols (!@#$%^&*)
+</label>
+
+</div>
+
+<input type="text" id="generatedPassword" readonly>
+
+<button class="green" onclick="generatePassword()">
+Generate Password
+</button>
+
+<button class="blue" onclick="copyPassword()">
+Copy Password
+</button>
+
+<button class="gray" onclick="showPage('home')">
+⬅ Back
+</button>
+
+</div>
+
+<script>
+
+// PAGE NAVIGATION
+
+function showPage(page){
+
+document.querySelectorAll(".page").forEach(function(p){
+p.classList.remove("active");
+});
+
+document.getElementById(page).classList.add("active");
+
+}
+
+// PASSWORD CHECKER
+
+const password=document.getElementById("password");
+
+password.addEventListener("input",function(){
+
+let p=password.value;
+let score=0;
+
+if(p.length>=8) score++;
+if(/[A-Z]/.test(p)) score++;
+if(/[a-z]/.test(p)) score++;
+if(/[0-9]/.test(p)) score++;
+if(/[^A-Za-z0-9]/.test(p)) score++;
+
+let width=score*20;
+
+document.getElementById("bar").style.width=width+"%";
+
+let text="None";
+let color="gray";
+
+if(score>0 && score<=2){
+text="Weak";
+color="red";
+}
+else if(score==3){
+text="Medium";
+color="orange";
+}
+else if(score==4){
+text="Strong";
+color="gold";
+}
+else if(score==5){
+text="Very Strong";
+color="green";
+}
+
+document.getElementById("bar").style.background=color;
+document.getElementById("strength").innerHTML="Strength: "+text;
+
+});
+
+// PASSWORD GENERATOR
+
+function generatePassword(){
+
+let chars="";
+
+if(document.getElementById("uppercase").checked)
+chars+="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+if(document.getElementById("lowercase").checked)
+chars+="abcdefghijklmnopqrstuvwxyz";
+
+if(document.getElementById("numbers").checked)
+chars+="0123456789";
+
+if(document.getElementById("symbols").checked)
+chars+="@#$%^&*_";
+
+if(chars==""){
+alert("Please select at least one category.");
+return;
+}
+
+let length=document.getElementById("length").value;
+
+let password="";
+
+for(let i=0;i<length;i++){
+
+password+=chars.charAt(Math.floor(Math.random()*chars.length));
+
+}
+
+document.getElementById("generatedPassword").value=password;
+
+}
+
+// COPY PASSWORD
+
+function copyPassword(){
+
+let pass=document.getElementById("generatedPassword").value;
+
+if(pass==""){
+alert("Generate a password first.");
+return;
+}
+
+navigator.clipboard.writeText(pass);
+
+alert("Password copied!");
+
+}
+
+// Generate one password on page load
+
+generatePassword();
+
+</script>
+
+</body>
+</html>
